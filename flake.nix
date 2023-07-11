@@ -19,40 +19,23 @@
         lib,
         ...
       }: let
-        # shorthand for accessing outputs
-        # you can access crate outputs under `config.nci.outputs.<crate name>` (see documentation)
         outputs = config.nci.outputs;
+        set-stdenv = old: {
+          override = old: {stdenv = pkgs.clangStdenv;};
+          packages = (old.packages or []) ++ [pkgs.cmake];
+        };
       in {
-        # declare projects
-        # relPath is the relative path of a project to the flake root
-        # TODO: change this to your crate's path
         nci.projects."radixdlt-scrypto" = {
           relPath = "simulator";
-          # export all crates (packages and devshell) in flake outputs
-          # alternatively you can access the outputs and export them yourself
           export = true;
         };
-        # configure crates
+
         nci.crates = {
-          "simulator" = {
-            # look at documentation for more options
-          };
+          depsOverrides = {inherit set-stdenv;};
+          overrides = {inherit set-stdenv;};
         };
 
-        devShells.default = outputs."radixdlt-scrypto".devShell.overrideAttrs (old: {
-          packages = (old.packages or []) ++ [pkgs.cmake];
-          nativeBuildInputs =
-            (old.nativeBuildinputs or [])
-            ++ (with pkgs; [
-              llvmPackages.libclang
-              llvmPackages.libcxxClang
-              clang
-            ]);
-          LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
-          BINDGEN_EXTRA_CLANG_ARGS = "-isystem ${pkgs.llvmPackages.libclang.lib}/lib/clang/${lib.getVersion pkgs.clang}/include";
-        });
-
-        packages.default = outputs."radixdlt-scrypto".packages.release;
+        devShells.default = outputs."radixdlt-scrypto".devShell;
       };
     };
 }
