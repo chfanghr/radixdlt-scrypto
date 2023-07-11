@@ -33,9 +33,11 @@
         nci.crates = {
           depsOverrides = {inherit set-stdenv;};
           overrides = {inherit set-stdenv;};
+          "simulator" = {};
         };
 
         devShells.default = outputs."radixdlt-scrypto".devShell;
+        packages.default = outputs."simulator".packages.release;
       };
     };
 }
